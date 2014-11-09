@@ -4,9 +4,6 @@
 FROM debian
 MAINTAINER http://www.github.com/b7alt/ by b7alt
 
-ENV DRUPAL_PASSWORD drupal
-ENV DRUPAL_DISTRO commons
-
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update 
 RUN apt-get upgrade -y
@@ -65,12 +62,15 @@ RUN echo sendmail_path=`which true` >> /etc/php5/fpm/php.ini
 
 #RUN /usr/sbin/mysqld &&  mysqladmin --protocol=TCP --host=127.0.0.1 -u root password drupal
 
+ENV DRUPAL_PASSWORD drupal
+
 RUN /usr/sbin/mysqld & \
     sleep 10s &&\
     mysqladmin --protocol=TCP --host=127.0.0.1 -u root password $DRUPAL_PASSWORD &&\
-    mysql -uroot -pdrupal -e "CREATE DATABASE www80; GRANT ALL PRIVILEGES ON www80.* TO 'drupal'@'localhost' IDENTIFIED BY '$DRUPAL_PASSWORD'; FLUSH PRIVILEGES;"
+    mysql -uroot -pdrupal -e "CREATE DATABASE drupal; GRANT ALL PRIVILEGES ON drupal.* TO 'drupal'@'localhost' IDENTIFIED BY '$DRUPAL_PASSWORD'; FLUSH PRIVILEGES;"
 
 
+ENV DRUPAL_DISTRO commons
 
 # Drupal distro Install
 RUN cd /tmp && drush dl $DRUPAL_DISTRO && mv /tmp/$DRUPAL_DISTRO*/* /srv/drupal/www/ && rm -rf /tmp/*
