@@ -105,6 +105,6 @@ RUN chmod a+w /srv/drupal/www/sites/default/files
 
 RUN echo "root:root" | chpasswd
 
-#ENTRYPOINT [ "/usr/bin/supervisord", "-n", "-c", "/supervisord.conf", "-e", "trace" ]
+ENTRYPOINT [ "/usr/bin/supervisord", "-n", "-c", "/supervisord.conf", "-e", "trace" ]
 
-CMD ["bash"]
+#CMD ["bash"]
