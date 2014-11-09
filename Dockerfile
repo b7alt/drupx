@@ -5,29 +5,44 @@ FROM debian
 MAINTAINER http://www.github.com/b7alt/ by b7alt
 
 ENV DRUPAL_PASSWORD drupal
-ENV DRUPAL_DISTRO drupal
+ENV DRUPAL_DISTRO commons
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update 
 RUN apt-get upgrade -y
-RUN apt-get install -y supervisor openssh-server nginx php5-fpm php5-sqlite php5-gd emacs php-apc wget
 
+# NGinx PHP
+RUN apt-get install -y supervisor openssh-server nginx php5-fpm php5-sqlite php5-gd php5-cli php5 php5-json php5-cli php5-curl curl php5-mcrypt php5-xdebug mcrypt libmcrypt-dev emacs php-apc wget
+
+# Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --filename=composer --install-dir=/usr/bin --version=1.0.0-alpha8
+
+# MySql
 RUN apt-get install -y mysql-server mysql-client php5-mysql
 
-RUN update-rc.d nginx disable
-RUN update-rc.d php5-fpm disable
-RUN update-rc.d supervisor disable
-RUN update-rc.d mysql disable
-RUN update-rc.d ssh disable
 
-EXPOSE 22 80
+
+#RUN update-rc.d nginx disable
+#RUN update-rc.d php5-fpm disable
+#RUN update-rc.d supervisor disable
+#RUN update-rc.d mysql disable
+#RUN update-rc.d ssh disable
+
+EXPOSE 22 80 3306
+
+# Drush
+
+RUN composer global require drush/drush:~7.0.0@alpha
+RUN ln -sf ~/.composer/vendor/bin/drush /usr/bin/drush
+
+
 
 # Drush install with pear
-RUN apt-get install -y php-pear
-RUN pear channel-discover pear.drush.org 
-RUN pear install drush/drush
-RUN drush version
-RUN pear upgrade drush/drush
+#RUN apt-get install -y php-pear
+#RUN pear channel-discover pear.drush.org 
+#RUN pear install drush/drush
+#RUN drush version
+#RUN pear upgrade drush/drush
 
 RUN mkdir -p /var/run/sshd /srv/drupal/www /srv/drupal/config /srv/data /srv/logs /tmp
 
@@ -54,7 +69,6 @@ RUN /usr/sbin/mysqld & \
     sleep 10s &&\
     mysqladmin --protocol=TCP --host=127.0.0.1 -u root password $DRUPAL_PASSWORD &&\
     mysql -uroot -pdrupal -e "CREATE DATABASE www80; GRANT ALL PRIVILEGES ON www80.* TO 'drupal'@'localhost' IDENTIFIED BY '$DRUPAL_PASSWORD'; FLUSH PRIVILEGES;"
-
 
 
 
@@ -91,5 +105,6 @@ RUN chmod a+w /srv/drupal/www/sites/default/files
 
 RUN echo "root:root" | chpasswd
 
-ENTRYPOINT [ "/usr/bin/supervisord", "-n", "-c", "/supervisord.conf", "-e", "trace" ]
+#ENTRYPOINT [ "/usr/bin/supervisord", "-n", "-c", "/supervisord.conf", "-e", "trace" ]
 
+CMD ["bash"]
